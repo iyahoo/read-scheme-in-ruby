@@ -16,9 +16,11 @@
   :version "0.1"
   :author "cl-yaho"
   :license "LLGPL"
+  :defsystem-depends-on (:cl21)
   :class :cl21-system
-  :depends-on (:cl21
-               :optima)
+  :depends-on (:cl-annot
+               :optima
+               :anaphora)
   :components ((:module "src"
                 :components
                 ((:file "scheme-impl"))))
