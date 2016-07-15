@@ -31,7 +31,7 @@
 (defun lookup-primitive-fun (exp)
   (aif (getf *primitive-fun-env* exp)
        it
-       (error "~S is undefined function" exp)))
+       (error "~S is undefined function or don't expected type" exp)))
 
 (defun immediate-val-p (exp)
   (numberp exp))
