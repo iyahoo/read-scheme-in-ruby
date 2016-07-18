@@ -41,7 +41,8 @@
 ;;        (error "~S is undefined function or don't expected type" exp)))
 
 @export
-(defun lookup-var (var env)
+(defunc lookup-var (var env)
+  (:pre ((keywordp var) (hash-table-p env)))
   (aif (getf env var)
        it
        (error "couldn't find value to variables:~S" var)))
@@ -66,7 +67,8 @@
    (third exp)))
 
 @export
-(defun special-form-p (exp)
+(defunc special-form-p (exp)
+  (:pre ((consp exp)))
   (or (letp exp) (lambdap exp)))
 
 (defun primitive-fun-p (exp)
@@ -76,10 +78,10 @@
 ;; env
 
 @export
-(defun extend-env (parameters args env)
+(defunc extend-env (parameters args env)
+  (:pre ((listp parameters) (listp args) (hash-table-p env)))
   (let ((new-env #H()))
-    (loop for value being the hash-values of env
-            using (hash-key key)
+    (loop for value being the hash-values of env using (hash-key key)
           :do (setf (getf new-env key) value))
     (loop :for x :in parameters
           :for y :in args
@@ -89,7 +91,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; closure
 
-(defun make-closure (exp env)
+(defunc make-closure (exp env)
+  (:pre ((listp exp) (hash-table-p env)))
   (let ((parameters (second exp))
         (body (third exp)))
     `(:closure ,parameters ,body ,env)))
@@ -98,12 +101,14 @@
 ;; apply
 
 @export
-(defun apply-primitive-fun (fun args)
+(defunc apply-primitive-fun (fun args)
+  (:pre ((primitive-fun-p fun) (listp args)))
   (let ((fun-val (second fun)))
     (apply fun-val args)))
 
 @export
-(defun apply-lambda (closure args)
+(defunc apply-lambda (closure args)
+  (:pre ((listp closure) (listp args)))
   (destructuring-bind (parameters body env) (closure-to-parameters-body-env closure)
     (let ((new-env (extend-env parameters args env)))
       (_eval body new-env))))
@@ -130,8 +135,8 @@
 ;; eval
 
 @export
-(defun si/eval (string-exp)
-  (assert (stringp string-exp))
+(defunc si/eval (string-exp)
+  (:pre ((stringp string-exp)))
   (_eval (read-from-string string-exp) *global-env*))
 
 @export
@@ -150,12 +155,14 @@
         (t (error "~S is unmatched as special form." exp))))
 
 @export
-(defun eval-list (exp env)
+(defunc eval-list (exp env)
+  (:pre ((listp exp) (hash-table-p env)))
   (map ^(_eval %1 env) exp))
 
 @export
-(defun _eval (exp env)
-  (if (listp exp)
+(defunc _eval (exp env)
+  (:pre ((hash-table-p env) (or (consp exp) (keywordp exp) (numberp exp))))
+  (if (consp exp)
       (if (special-form-p exp)
           (eval-special-form exp env)
           (let ((fun (_eval (first exp) env))
