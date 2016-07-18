@@ -2,9 +2,7 @@
 (defpackage scheme-impl-test
   (:use :cl21
         :scheme-impl
-        :prove)
-  (:import-from :scheme-impl
-                :si/eval))
+        :prove))
 (in-package :scheme-impl-test)
 
 ;; NOTE: To run this test file, execute `(asdf:test-system :scheme-impl)' in your Lisp.
@@ -13,6 +11,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; global variable
+;; *global-env* is defiend in :scheme-impl
 
 (defparameter *env* *global-env*)
 
@@ -20,7 +19,8 @@
 ;; lookup
 
 (subtest "lookup-var"
-  (is (lookup-var :y #H(:x 1 :y 2)) 2))
+  (is (lookup-var :y #H(:x 1 :y 2))
+      2))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; predicate
@@ -34,17 +34,16 @@
 
 (subtest "extend-env"
   (is (extend-env '(:x :z) '(1 2) #H(:y 3))
-      #H(:z 2 :x 1 :y 3)
-      :test #'equalp)
+      #H(:z 2 :x 1 :y 3) :test #'equalp)
   (is (extend-env '(:x :y) '(2 4) #H(:z 4))
-      #H(:x 2 :y 4 :z 4)
-      :test #'equalp))
+      #H(:x 2 :y 4 :z 4) :test #'equalp))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; apply
 
 (subtest "si/apply"
-  (is (si/apply '(:prim +) '(1 2 3)) 6))
+  (is (si/apply '(:prim +) '(1 2 3))
+      6))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parse
@@ -69,15 +68,22 @@
       '(1 2 3 4)))
 
 (subtest "_eval"
-  (is (_eval '(:+ :x :y) #H(:x 2 :y 4 :z 4 :+ '(:prim +))) 6))
+  (is (_eval '(:+ :x :y) #H(:x 2 :y 4 :z 4 :+ '(:prim +)))
+      6))
 
 (subtest "si/eval"
-  (is (si/eval "3") 3)
-  (is (si/eval "3.2") 3.2)
-  (is (si/eval "100/20") 5)
-  (is (si/eval "(:+ 1 2)") 3)
-  (is (si/eval "((:lambda (:a :b) (:+ :a :b)) 3 2)") 5)
-  (is (si/eval "((:lambda (:x :y :z) (:+ :x :y :z)) 3 2 5)") 10)
+  (is (si/eval "3")
+      3)
+  (is (si/eval "3.2")
+      3.2)
+  (is (si/eval "100/20")
+      5)
+  (is (si/eval "(:+ 1 2)")
+      3)
+  (is (si/eval "((:lambda (:a :b) (:+ :a :b)) 3 2)")
+      5)
+  (is (si/eval "((:lambda (:x :y :z) (:+ :x :y :z)) 3 2 5)")
+      10)
   (is (si/eval "(:let ((:z 3))
                   ((:lambda (:x :y) (:+ :x :y :z))
                    2 5))")
