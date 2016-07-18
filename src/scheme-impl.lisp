@@ -2,7 +2,8 @@
 (defpackage scheme-impl
   (:use #:cl21
         #:cl-annot
-        #:anaphora))
+        #:anaphora
+        #:cl-dbc-lclj))
 (in-package :scheme-impl)
 
 (annot:enable-annot-syntax)
@@ -19,9 +20,8 @@
   (ql:quickload :scheme-impl)
   (in-package :scheme-impl)
   (asdf:test-system :scheme-impl))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; global variable
+;; global variables
 
 (defparameter *primitive-fun-env*
   #H(:+ '(:prim +)
@@ -76,7 +76,6 @@
 ;; env
 
 @export
-
 (defun extend-env (parameters args env)
   (let ((new-env #H()))
     (loop for value being the hash-values of env

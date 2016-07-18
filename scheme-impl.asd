@@ -20,7 +20,8 @@
   :class :cl21-system
   :depends-on (:cl-annot
                :optima
-               :anaphora)
+               :anaphora
+               :cl-dbc-lclj)
   :components ((:module "src"
                 :components
                 ((:file "scheme-impl"))))
