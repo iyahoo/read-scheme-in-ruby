@@ -21,7 +21,8 @@
   :depends-on (:cl-annot
                :optima
                :anaphora
-               :cl-dbc-lclj)
+               :cl-dbc-lclj
+               :alexandria)
   :components ((:module "src"
                 :components
                 ((:file "scheme-impl"))))

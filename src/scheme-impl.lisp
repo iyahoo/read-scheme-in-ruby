@@ -3,7 +3,8 @@
   (:use #:cl21
         #:cl-annot
         #:anaphora
-        #:cl-dbc-lclj))
+        #:cl-dbc-lclj
+        #:alexandria))
 (in-package :scheme-impl)
 
 (annot:enable-annot-syntax)
