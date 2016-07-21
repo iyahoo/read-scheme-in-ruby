@@ -1,8 +1,8 @@
 (in-package :cl21-user)
 (defpackage scheme-impl-test
-  (:use :cl21
-        :scheme-impl
-        :prove))
+  (:use #:cl21
+        #:scheme-impl
+        #:prove))
 (in-package :scheme-impl-test)
 
 ;; NOTE: To run this test file, execute `(asdf:test-system :scheme-impl)' in your Lisp.
@@ -14,6 +14,10 @@
 ;; *global-env* is defiend in :scheme-impl
 
 (defparameter *env* *global-env*)
+
+(subtest "env"
+  (ok (hash-table-p *global-env*))
+  (ok (hash-table-p *env*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lookup
@@ -55,6 +59,10 @@
 (subtest "let-to-parameters-args-body"
   (is (let-to-parameters-args-body '(:let ((:x 1) (:y 2)) (:+ :x :y)))
       '((:x :y) (1 2) (:+ :x :y))))
+
+(subtest "if-to-cond-true-false"
+  (is (if-to-cond-true-false '(:if :true 1 2))
+      '(:true 1 2)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; eval

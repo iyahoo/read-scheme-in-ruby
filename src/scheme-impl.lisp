@@ -18,29 +18,34 @@
 ;; 開発用
 ;; M-x slime-restart-inferior-lisp
 ;; ↓
+
 (defun in-env ()
   (ql:quickload :scheme-impl)
   (in-package :scheme-impl)
   (asdf:test-system :scheme-impl))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; global variables
 
 (defparameter *primitive-fun-env*
-  #H(:+ '(:prim +)
-     :- '(:prim -)
-     :* '(:prim *)))
+  '(:+  (:prim +)
+    :-  (:prim -)
+    :*  (:prim *)
+    :>  (:prim >)
+    :>= (:prim >=)
+    :<  (:prim <)
+    :<= (:prim <=)
+    :== (:prim =)))
+
+(defparameter *boolean-env*
+  '(:true t
+    :false nil))
 
 @export
-(defparameter *global-env* *primitive-fun-env*)
+(defparameter *global-env* (plist-hash-table (append *primitive-fun-env* *boolean-env*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lookup
-
-;; @export
-;; (defun lookup-primitive-fun (exp)
-;;   (aif (getf *primitive-fun-env* exp)
-;;        it
-;;        (error "~S is undefined function or don't expected type" exp)))
 
 @export
 (defunc lookup-var (var env)
@@ -62,16 +67,26 @@
    (listp (second exp))
    (third exp)))
 
+;; (defun letrec (exp))
+
 (defun lambdap (exp)
   (and
    (eq :lambda (first exp))
    (listp (second exp))
    (third exp)))
 
+(defun ifp (exp)
+  (and
+   (eq :if (first exp))
+   (second exp)
+   (third exp)
+   (not (fourth exp))))
+
 @export
 (defunc special-form-p (exp)
   (:pre ((consp exp)))
-  (or (letp exp) (lambdap exp)))
+  (funcall #'(or letp lambdap ifp ;; letrecp
+                 ) exp))
 
 (defun primitive-fun-p (exp)
   (eq (first exp) :prim))
@@ -133,12 +148,16 @@
     ,(map #'second (second exp))
     ,(third exp)))
 
+@export
+(defun if-to-cond-true-false (exp)
+  `(,(second exp) ,(third exp) ,(fourth exp)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; eval
 
 @export
 (defunc si/eval (string-exp)
-  (:pre ((stringp string-exp)))
+  (:pre ((stringp string-exp) (hash-table-p *global-env*)))
   (_eval (read-from-string string-exp) *global-env*))
 
 @export
@@ -151,9 +170,17 @@
 (defun eval-lambda (exp env)
   (make-closure exp env))
 
+(defun eval-if (exp env)
+  (destructuring-bind (condi true-clause false-clause) (if-to-cond-true-false exp)
+    (if (_eval condi env)
+        (_eval true-clause env)
+        (_eval false-clause env))))
+
 (defun eval-special-form (exp env)
   (cond ((lambdap exp) (eval-lambda exp env))
         ((letp exp) (eval-let exp env))
+        ;; ((letrecp exp) (eval-letrec exp env))
+        ((ifp exp) (eval-if exp env))
         (t (error "~S is unmatched as special form." exp))))
 
 @export
