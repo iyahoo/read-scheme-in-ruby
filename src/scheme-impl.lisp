@@ -79,7 +79,8 @@
   (and
    (eq :if (first exp))
    (second exp)
-   (third exp)))
+   (third exp)
+   (fourth exp)))
 
 @export
 (defunc special-form-p (exp)
