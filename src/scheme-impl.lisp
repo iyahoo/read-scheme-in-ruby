@@ -3,8 +3,9 @@
   (:use #:cl21
         #:cl-annot
         #:anaphora
-        #:cl-dbc-lclj
-        #:alexandria))
+        #:cl-dbc-lclj)
+  (:import-from #:alexandria
+                #:plist-hash-table))
 (in-package :scheme-impl)
 
 (annot:enable-annot-syntax)
