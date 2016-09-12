@@ -115,7 +115,7 @@
   (:pre ((listp exp) (hash-table-p env)))
   (let ((parameters (second exp))
         (body (third exp)))
-    `(:closure ,parameters ,body ,env)))
+    (list :closure parameters body env)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; apply
@@ -192,6 +192,7 @@
 @export
 (defun eval-letrec (exp env)
   (destructuring-bind (parameters args body) (letrec-to-parameters-args-body exp)
+;;    (declare (ignore body))
     (let* ((ext-env (extend-env-by-dummy parameters env))
            (args-val (eval-list args ext-env)))
       (update-extend-env parameters args-val ext-env)
