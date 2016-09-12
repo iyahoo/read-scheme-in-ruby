@@ -40,7 +40,9 @@
   (is (extend-env '(:x :z) '(1 2) #H(:y 3))
       #H(:z 2 :x 1 :y 3) :test #'equalp)
   (is (extend-env '(:x :y) '(2 4) #H(:z 4))
-      #H(:x 2 :y 4 :z 4) :test #'equalp))
+      #H(:x 2 :y 4 :z 4) :test #'equalp)
+  (is (extend-env-by-dummy '(:a :b :c) #H(:+ '(:prim +)))
+      #H(:a :dummy :b :dummy :c :dummy :+ '(:prim +)) :test #'equalp))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; apply
@@ -80,18 +82,22 @@
       6))
 
 (subtest "si/eval"
+  ;; number
   (is (si/eval "3")
       3)
   (is (si/eval "3.2")
       3.2)
   (is (si/eval "100/20")
       5)
+  ;; add
   (is (si/eval "(:+ 1 2)")
       3)
+  ;; lambda
   (is (si/eval "((:lambda (:a :b) (:+ :a :b)) 3 2)")
       5)
   (is (si/eval "((:lambda (:x :y :z) (:+ :x :y :z)) 3 2 5)")
       10)
+  ;; let
   (is (si/eval "(:let ((:z 3))
                   ((:lambda (:x :y) (:+ :x :y :z))
                    2 5))")
@@ -100,10 +106,12 @@
                   (:let ((:fun (:lambda (:y) (:+ :x :y))))
                     (:+ (:fun 1) (:fun 2))))")
       9)
+  ;; if
   (is (si/eval "(:if (:< 2 3)
                      :true
                      :false)")
       t)
+  ;; comp
   (is (si/eval "(:>= 3 3)")
       t)
   (is (si/eval "(:if (:> 2 3)
@@ -112,6 +120,21 @@
                           (:let ((:x :true))
                             :x)
                           :false))")
-      t))
+      t)
+  ;; recursion in let
+  (is (si/eval "(:let ((:fact (:lambda (:n)
+                                (:if (:< :n 1)
+                                     1
+                                     (:* (:fact (:- :n 1)))))))
+                  (:fact 0))")
+      1)
+  (is-error (si/eval "(:let ((:fact (:lambda (:n)
+                                (:if (:< :n 1)
+                                     1
+                                     (:* (:fact (:- :n 1)))))))
+                  (:fact 1))")
+            'simple-error)
+  ;; letrec
+  )
 
 (finalize)

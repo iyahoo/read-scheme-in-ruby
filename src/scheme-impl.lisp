@@ -67,7 +67,11 @@
    (listp (second exp))
    (third exp)))
 
-;; (defun letrec (exp))
+(defun letrecp (exp)
+  (and
+   (eq :letrec (first exp))
+   (listp (second exp))
+   (third exp)))
 
 (defun lambdap (exp)
   (and
@@ -85,8 +89,7 @@
 @export
 (defunc special-form-p (exp)
   (:pre ((consp exp)))
-  (funcall #'(or letp lambdap ifp ;; letrecp
-                 ) exp))
+  (funcall #'(or letp lambdap ifp letrecp) exp))
 
 (defun primitive-fun-p (exp)
   (eq (first exp) :prim))
@@ -148,6 +151,9 @@
     ,(map #'second (second exp))
     ,(third exp)))
 
+;; defun letrec-to-parameter-args-body
+(setf (symbol-function 'letrec-to-parameter-args-body) #'let-to-parameters-args-body)
+
 @export
 (defun if-to-cond-true-false (exp)
   `(,(second exp) ,(third exp) ,(fourth exp)))
@@ -166,6 +172,21 @@
     (let ((new-exp (append `((:lambda ,parameters ,body)) args)))
       (_eval new-exp env))))
 
+(defun repeat (n obj)
+  (if (= n 0)
+      '()
+      (cons obj (repeat (1- n) obj))))
+
+@export
+(defun extend-env-by-dummy (parameters env)
+  (extend-env parameters (repeat (length parameters) :dummy) env))
+
+@export
+(defun eval-letrec (exp env)
+  (destructuring-bind (parameters args body) (letrec-to-parameter-args-body exp)
+    (let* ((new-env (extend-env-by-dummy))
+           (args-val (eval-list args ))))))
+
 @export
 (defun eval-lambda (exp env)
   (make-closure exp env))
@@ -179,7 +200,7 @@
 (defun eval-special-form (exp env)
   (cond ((lambdap exp) (eval-lambda exp env))
         ((letp exp) (eval-let exp env))
-        ;; ((letrecp exp) (eval-letrec exp env))
+        ((letrecp exp) (eval-letrec exp env))
         ((ifp exp) (eval-if exp env))
         (t (error "~S is unmatched as special form." exp))))
 
