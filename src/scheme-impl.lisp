@@ -147,12 +147,14 @@
 
 @export
 (defun let-to-parameters-args-body (exp)
-  `(,(map #'first (second exp))
-    ,(map #'second (second exp))
-    ,(third exp)))
+  (list (map #'first (second exp))
+        (map #'second (second exp))
+        (third exp)))
 
 ;; defun letrec-to-parameter-args-body
-(setf (symbol-function 'letrec-to-parameter-args-body) #'let-to-parameters-args-body)
+@export
+(defun letrec-to-parameters-args-body (exp)
+  (let-to-parameters-args-body exp))
 
 @export
 (defun if-to-cond-true-false (exp)
@@ -181,11 +183,19 @@
 (defun extend-env-by-dummy (parameters env)
   (extend-env parameters (repeat (length parameters) :dummy) env))
 
+;; サイズが大きくなる可能性のある環境の Hash-table の更新なので副作用を用いる？
+(defun update-extend-env (parameters args-val ext-env)
+  (map (lambda (param val) (setf (gethash ext-env param) val))
+       parameters
+       args-val))
+
 @export
 (defun eval-letrec (exp env)
-  (destructuring-bind (parameters args body) (letrec-to-parameter-args-body exp)
-    (let* ((new-env (extend-env-by-dummy))
-           (args-val (eval-list args ))))))
+  (destructuring-bind (parameters args body) (letrec-to-parameters-args-body exp)
+    (let* ((ext-env (extend-env-by-dummy parameters env))
+           (args-val (eval-list args ext-env)))
+      (update-extend-env parameters args-val ext-env)
+      (_eval (list (list :lambda parameters body) (car args)) ext-env))))
 
 @export
 (defun eval-lambda (exp env)
