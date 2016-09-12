@@ -60,7 +60,17 @@
 
 (subtest "let-to-parameters-args-body"
   (is (let-to-parameters-args-body '(:let ((:x 1) (:y 2)) (:+ :x :y)))
-      '((:x :y) (1 2) (:+ :x :y))))
+      '((:x :y) (1 2) (:+ :x :y)))
+  (is (let-to-parameters-args-body '(:let ((:func (:lambda (:x :y :z) (:+ :x :y :z)))) (:func 1 2 3)))
+      '((:func) ((:lambda (:x :y :z) (:+ :x :y :z))) (:func 1 2 3))))
+
+(subtest "letrec-to-parameters-args-body"
+  (is (letrec-to-parameters-args-body '(:letrec ((:fact (:lambda (:n)
+                                                          (:if (:< :n 1)
+                                                               1
+                                                               (:* (:fact (:- :n 1)))))))
+                                          (:fact 1)))
+      '((:fact) ((:lambda (:n) (:if (:< :n 1) 1 (:* (:fact (:- :n 1)))))) (:fact 1))))
 
 (subtest "if-to-cond-true-false"
   (is (if-to-cond-true-false '(:if :true 1 2))
@@ -132,9 +142,20 @@
                                 (:if (:< :n 1)
                                      1
                                      (:* (:fact (:- :n 1)))))))
-                  (:fact 1))")
+                        (:fact 1))")
             'simple-error)
   ;; letrec
-  )
+  (is (si/eval "(:letrec ((:fact (:lambda (:n)
+                                (:if (:< :n 1)
+                                     1
+                                     (:* (:fact (:- :n 1)))))))
+                  (:fact 0))")
+      1)
+  (is (si/eval "(:letrec ((:fact (:lambda (:n)
+                                (:if (:< :n 1)
+                                     1
+                                     (:* (:fact (:- :n 1)))))))
+                  (:fact 3))")
+      6))
 
 (finalize)
