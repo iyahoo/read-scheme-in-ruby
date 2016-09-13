@@ -154,8 +154,14 @@
   (is (si/eval "(:letrec ((:fact (:lambda (:n)
                                 (:if (:< :n 1)
                                      1
-                                     (:* (:fact (:- :n 1)))))))
+                                     (:* :n (:fact (:- :n 1)) )))))
                   (:fact 3))")
-      6))
+      6)
+  (is (si/eval "(:letrec ((:fact (:lambda (:n)
+                                (:if (:< :n 1)
+                                     1
+                                     (:* :n (:fact (:- :n 1)) )))))
+                  (:fact 5))")
+      120))
 
 (finalize)
