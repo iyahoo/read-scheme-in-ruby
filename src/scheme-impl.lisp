@@ -183,7 +183,7 @@
 (defun extend-env-by-dummy (parameters env)
   (extend-env parameters (repeat (length parameters) :dummy) env))
 
-;; サイズが大きくなる可能性のある環境の Hash-table の更新なので副作用を用いる？
+;; サイズが大きくなる可能性のある環境の Hash-table の更新なので副作用を用いる？ (copyではだめなのか)
 (defun update-extend-env (parameters args-val ext-env)
   (map (lambda (param val) (setf (gethash ext-env param) val))
        parameters
@@ -192,7 +192,6 @@
 @export
 (defun eval-letrec (exp env)
   (destructuring-bind (parameters args body) (letrec-to-parameters-args-body exp)
-;;    (declare (ignore body))
     (let* ((ext-env (extend-env-by-dummy parameters env))
            (args-val (eval-list args ext-env)))
       (update-extend-env parameters args-val ext-env)
