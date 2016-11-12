@@ -41,8 +41,13 @@
   '(:true t
     :false nil))
 
+(defparameter *list-env*
+  (list :nil '()
+        :null? (list :prim ^(nullp %1))
+        :cons (list :prim ^(cons %1 %2))))
+
 @export
-(defparameter *global-env* (plist-hash-table (append *primitive-fun-env* *boolean-env*)))
+(defparameter *global-env* (plist-hash-table (append *primitive-fun-env* *boolean-env* *list-env*)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lookup
@@ -93,6 +98,9 @@
 
 (defun primitive-fun-p (exp)
   (eq (first exp) :prim))
+
+(defun nullp (lst)
+  (null lst))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; env
@@ -184,6 +192,8 @@
   (extend-env parameters (repeat (length parameters) :dummy) env))
 
 ;; サイズが大きくなる可能性のある環境の Hash-table の更新なので副作用を用いる？ (copyではだめなのか)
+;; A. lambda の持つ環境を更新しなければならないため
+
 (defun update-extend-env (parameters args-val ext-env)
   (map (lambda (param val) (setf (gethash ext-env param) val))
        parameters
